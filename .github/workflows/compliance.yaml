@@ -90,6 +90,11 @@ jobs:
           NODE_HTTP: http://127.0.0.1:8545
           RPC_API: eth,debug
           RUST_LOG: debug
+
+      - name: Sleep for 10 seconds
+        run: sleep 10s
+        shell: bash
+
       - name: Run test
         working-directory: ./bundler-spec-tests
         run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://127.0.0.1:3000 --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://127.0.0.1:8545
