@@ -1,9 +1,11 @@
 name: compliance
 
+
 on:
   push:
     branches:
       - josh/*
+  pull_request:
 
 jobs:
   compliance:
