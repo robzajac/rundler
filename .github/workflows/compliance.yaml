@@ -21,12 +21,6 @@ jobs:
         with:
           node-version: 18.15
 
-      - name: Setup Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
-          cache: true
-
       - name: Checkout bundler spec test
         uses: actions/checkout@v3
         with:
