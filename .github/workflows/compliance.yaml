@@ -95,6 +95,10 @@ jobs:
         run: sleep 10s
         shell: bash
 
+      - name: Check geth
+        run: curl -X POST -H \"Content-Type: application/json\" --data \'{\"jsonrpc\":\"2.0\",\"method\":\"web3_clientVersion\",\"params\":[],\"id\":67}\' http://localhost:8545
+
+
       - name: Run test
         working-directory: ./bundler-spec-tests
-        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://localhost:3000/ --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545/
+        run: pdm run pytest -rA -W ignore::DeprecationWarning --url http://localhost:3000 --entry-point 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --ethereum-node http://localhost:8545/
