@@ -87,8 +87,8 @@ jobs:
 
       - name: Build/Run Rundler
         run: |
-          cargo build && \
-          cargo run &
+          cargo build --release && \
+          cargo run node --release &
         env:
           BUILDER_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
           ENTRY_POINTS: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
