@@ -85,19 +85,19 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Build Rundler
-        run: cargo build
-
       - name: Run Rundler
         run: | 
           cargo run node &
-          sleep 30s
         env:
           BUILDER_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
           ENTRY_POINTS: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
           NODE_HTTP: http://localhost:8545
           RPC_API: eth,debug
           RUST_LOG: debug
+
+      - name: Sleep
+        run: sleep 200s
+        shell: bash
 
       - name: show listening addresses
         run: sudo lsof -i -P -n | grep LISTEN
