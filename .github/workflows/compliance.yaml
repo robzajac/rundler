@@ -85,6 +85,9 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
+      - name: Build Rundler
+        run: cargo build
+
       - name: Run Rundler
         run: cargo run node &
         env:
