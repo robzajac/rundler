@@ -62,6 +62,9 @@ jobs:
           --rpc.allow-unprotected-txs \
           --miner.gaslimit 12000000 &
 
+      - name: show listening addresses
+        run: sudo lsof -i -P -n | grep LISTEN
+
       - name: Install protobuf
         run: sudo apt-get install -y protobuf-compiler
 
