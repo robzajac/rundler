@@ -51,4 +51,5 @@ jobs:
         run: |
           cargo install cross --git https://github.com/cross-rs/cross 
           export PROFILE=release
+          export GIT_TAG=$(shell git describe --tags --abbrev=0)
           sudo -E env "PATH=$PATH" make docker-build-latest

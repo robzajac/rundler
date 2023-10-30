@@ -7,7 +7,6 @@ PROFILE ?= release
 DOCKER_IMAGE_NAME ?= alchemyplatform/rundler
 BIN_DIR = "dist/bin"
 BUILD_PATH = "target"
-GIT_TAG ?= $(shell git describe --tags --abbrev=0)
 
 .PHONY: build
 build: ## Build the project.
@@ -38,8 +37,6 @@ test-spec-modular: ## Run spec tests in modular mode
 submodule-update: ## Run spec tests in modular mode
 	git submodule update
 
-# Note: The additional rustc compiler flags are for intrinsics needed by MDBX.
-# See: https://github.com/cross-rs/cross/wiki/FAQ#undefined-reference-with-build-std
 build-%:
 	cross build --bin rundler --target $* --profile "$(PROFILE)"
 	
