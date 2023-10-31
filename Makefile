@@ -7,6 +7,7 @@ PROFILE ?= release
 DOCKER_IMAGE_NAME ?= alchemyplatform/rundler
 BIN_DIR = "dist/bin"
 BUILD_PATH = "target"
+GIT_TAG ?= "latest"
 
 .PHONY: build
 build: ## Build the project.
