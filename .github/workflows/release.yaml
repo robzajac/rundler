@@ -123,3 +123,94 @@ jobs:
         with:
           name: rundler-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
           path: rundler-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
+
+  draft-release:
+      name: draft release
+      needs: [build, extract-version]
+      runs-on: ubuntu-latest
+      env:
+        VERSION: ${{ needs.extract-version.outputs.VERSION }}
+      permissions:
+        # Required to post the release
+        contents: write
+      steps:
+        # This is necessary for generating the changelog. It has to come before "Download Artifacts" or else it deletes the artifacts.
+        - name: Checkout sources
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        # ==============================
+        #       Download artifacts
+        # ==============================
+        - name: Download artifacts
+          uses: actions/download-artifact@v3
+
+        # ==============================
+        #       Create release draft
+        # ==============================
+        - name: Generate full changelog
+          id: changelog
+          run: |
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "$(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 ${{ env.VERSION }}^)..${{ env.VERSION }})" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+        - name: Create release draft
+          env:
+            GITHUB_USER: ${{ github.repository_owner }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # The formatting here is borrowed from Reth & Lighthouse (which is borrowed from OpenEthereum):
+          # https://github.com/openethereum/openethereum/blob/main/.github/workflows/build.yml
+          run: |
+            body=$(cat <<- "ENDBODY"
+            <Release Name>
+
+            ## Testing Checklist (DELETE ME)
+
+            - [ ] Run on testnet for 1-3 days.
+            - [ ] Ensure all CI checks pass.
+
+            ## Release Checklist (DELETE ME)
+
+            - [ ] Ensure all crates have had their versions bumped.
+            - [ ] Write the summary.
+            - [ ] Ensure all binaries have been added.
+            - [ ] Prepare release posts (Twitter, ...).
+
+            ## Summary
+
+            Add a summary, including:
+
+            - Critical bug fixes
+            - New features
+            - Any breaking changes (and what to expect)
+
+            ## All Changes
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Binaries
+
+            The binaries are signed with the PGP key: `A3AE 097C 8909 3A12 4049  DF1F 5391 A3C4 1005 30B4`
+
+            | System | Architecture | Binary | PGP Signature |
+            |:---:|:---:|:---:|:---|
+            | <img src="https://simpleicons.org/icons/linux.svg" style="width: 32px;"/> | x86_64 | [rundler-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz.asc) |
+            | <img src="https://simpleicons.org/icons/linux.svg" style="width: 32px;"/> | aarch64 | [rundler-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-aarch64-unknown-linux-gnu.tar.gz.asc) |
+            | <img src="https://simpleicons.org/icons/windows.svg" style="width: 32px;"/> | x86_64 | [rundler-${{ env.VERSION }}-x86_64-pc-windows-gnu.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-pc-windows-gnu.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-pc-windows-gnu.tar.gz.asc) |
+            | <img src="https://simpleicons.org/icons/apple.svg" style="width: 32px;"/> | x86_64 | [rundler-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-x86_64-apple-darwin.tar.gz.asc) |
+            | <img src="https://simpleicons.org/icons/apple.svg" style="width: 32px;"/> | aarch64 | [rundler-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz) | [PGP Signature](https://github.com/${{ env.REPO_NAME }}/releases/download/${{ env.VERSION }}/rundler-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz.asc) |
+            | | | | |
+            | **System** | **Option** | - | **Resource** |
+            | <img src="https://simpleicons.org/icons/docker.svg" style="width: 32px;"/> | Docker | [${{ env.VERSION }}](https://hub.docker.com/r/alchemyplatform/rundler) |
+
+            ENDBODY
+            )
+            assets=()
+            for asset in ./rundler-*.tar.gz*; do
+                assets+=("-a" "$asset/$asset")
+            done
+            tag_name="${{ env.VERSION }}"
+            echo "$body" | gh release create --draft "${assets[@]}" -F "-" "$tag_name"
