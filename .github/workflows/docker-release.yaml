@@ -50,5 +50,4 @@ jobs:
       - name: Build and push image
         run: |
           cargo install cross --git https://github.com/cross-rs/cross 
-          export PROFILE=release
-          sudo -E env "PATH=$PATH" make docker-build-latest  GIT_TAG=$(git describe --tags --abbrev=0)
+          sudo -E env "PATH=$PATH" make docker-build-latest

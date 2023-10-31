@@ -7,7 +7,7 @@ PROFILE ?= release
 DOCKER_IMAGE_NAME ?= alchemyplatform/rundler
 BIN_DIR = "dist/bin"
 BUILD_PATH = "target"
-GIT_TAG ?= "latest"
+GIT_TAG ?= $(shell git describe --tags --abbrev=0)
 
 .PHONY: build
 build: ## Build the project.
@@ -48,6 +48,8 @@ docker-build-latest: ## Build and push a cross-arch Docker image tagged with the
 
 # Create a cross-arch Docker image with the given tags and push it
 define build_docker_image
+	echo $(GIT_TAG)
+
 	$(MAKE) build-aarch64-unknown-linux-gnu
 	mkdir -p $(BIN_DIR)/arm64
 	cp $(BUILD_PATH)/aarch64-unknown-linux-gnu/$(PROFILE)/rundler $(BIN_DIR)/arm64/rundler
