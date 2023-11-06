@@ -101,7 +101,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           export GPG_TTY=$(tty)
-          echo -n "$GPG_SIGNING_KEY" | base64 --decode | gpg --batch --import
+          echo -n "$GPG_SIGNING_KEY" | gpg --batch --import
           cd artifacts
           tar -czf rundler-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz rundler*
           echo "$GPG_PASSPHRASE" | gpg --passphrase-fd 0 --pinentry-mode loopback --batch -ab rundler-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
@@ -193,7 +193,7 @@ jobs:
 
             ## Binaries
 
-            The binaries are signed with the PGP key: `A3AE 097C 8909 3A12 4049  DF1F 5391 A3C4 1005 30B4`
+            The binaries are signed with the PGP key: `85C5 DEF0 37D3 FDE4 FC17  94B1 475B 35EA 9352 EB2`
 
             | System | Architecture | Binary | PGP Signature |
             |:---:|:---:|:---:|:---|
