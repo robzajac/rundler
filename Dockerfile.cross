@@ -4,7 +4,7 @@
 FROM --platform=$TARGETPLATFORM ubuntu:22.04
 
 LABEL org.opencontainers.image.source=https://github.com/alchemyplatform/rundler
-LABEL org.opencontainers.image.licenses="MIT OR Apache-2.0"
+LABEL org.opencontainers.image.licenses="GNU Lesser General Public License v3.0"
 
 # Filled by docker buildx
 ARG TARGETARCH
