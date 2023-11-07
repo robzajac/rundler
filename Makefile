@@ -35,13 +35,16 @@ test-spec-modular: ## Run spec tests in modular mode
 	test/spec-tests/remote/run-spec-tests.sh
 
 .PHONY: submodule-update
-submodule-update: ## Run spec tests in modular mode
+submodule-update: ## Update git submodules
 	git submodule update
 
 build-%:
 	cross build --bin rundler --target $* --profile "$(PROFILE)"
 	
 # Note: This requires a buildx builder with emulation support. For example:
+#
+# `docker run --privileged --rm tonistiigi/binfmt --install amd64,arm64`
+# `docker buildx create --use --driver docker-container --name cross-builder`
 .PHONY: docker-build-latest
 docker-build-latest: ## Build and push a cross-arch Docker image tagged with the latest git tag and `latest`.
 	$(call build_docker_image,$(GIT_TAG),latest)
@@ -65,11 +68,3 @@ define build_docker_image
 		--provenance=false 
 endef
 
-
-
-# docker buildx build --file ./Dockerfile.cross . \
-# 	--platform linux/amd64,linux/arm64 \
-# 	--tag $(DOCKER_IMAGE_NAME):$(1) \
-# 	--tag $(DOCKER_IMAGE_NAME):$(2) \
-# 	--provenance=false \
-# 	--push
