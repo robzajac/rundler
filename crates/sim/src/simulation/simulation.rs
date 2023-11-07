@@ -296,10 +296,13 @@ where
                 ));
             }
 
-            let mut needs_stake = entity.kind == EntityType::Paymaster
-                && !entry_point_out.return_info.paymaster_context.is_empty();
-
-            let mut needs_stake_entity_type = None;
+            let mut needs_stake_entity_type = if entity.kind == EntityType::Paymaster
+                && !entry_point_out.return_info.paymaster_context.is_empty()
+            {
+                Some(EntityType::Paymaster)
+            } else {
+                None
+            };
 
             let mut banned_slots_accessed = IndexSet::<StorageSlot>::new();
             for StorageAccess { address, slots } in &phase.storage_accesses {
@@ -318,7 +321,6 @@ where
                     match restriction {
                         StorageRestriction::Allowed => {}
                         StorageRestriction::NeedsStake(e) => {
-                            needs_stake = true;
                             needs_stake_entity_type = Some(e);
                         }
                         StorageRestriction::Banned => {
@@ -330,8 +332,8 @@ where
                     }
                 }
             }
-            if needs_stake {
-                let entity_type = needs_stake_entity_type.unwrap();
+
+            if let Some(entity_type) = needs_stake_entity_type {
                 entities_needing_stake.push(entity_type);
 
                 let entity_info = entity_infos.get(entity_type).unwrap();
