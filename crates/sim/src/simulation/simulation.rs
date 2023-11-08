@@ -261,7 +261,7 @@ where
         }
 
         let sender_address = entity_infos.sender_address();
-        let mut entity_type_storage_restrictions: HashMap<&str, Entity> = HashMap::new();
+        let mut entity_type_storage_restrictions: HashMap<String, Entity> = HashMap::new();
 
         for (index, phase) in tracer_out.phases.iter().enumerate().take(3) {
             let kind = entity_type_from_simulation_phase(index).unwrap();
@@ -687,13 +687,13 @@ impl EntityInfos {
 
     fn add_to_storage_restrictions(
         &self,
-        storage_restictions: &mut HashMap<&str, Entity>,
+        storage_restictions: &mut HashMap<String, Entity>,
         entity: EntityType,
     ) -> Result<(), SimulationError> {
         let entity_info = self.get(entity).context("Entity info not found")?;
 
         storage_restictions.insert(
-            entity.to_str(),
+            entity.to_str().to_string(),
             Entity {
                 kind: entity,
                 address: entity_info.address,
