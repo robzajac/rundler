@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU General Public License along with Rundler.
 // If not, see https://www.gnu.org/licenses/.
 
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, hash::Hash, str::FromStr};
 
 use anyhow::bail;
 use ethers::{types::Address, utils::to_checksum};
@@ -20,7 +20,9 @@ use serde::{ser::SerializeStruct, Deserialize, Serialize};
 use strum::EnumIter;
 
 /// The type of an entity
-#[derive(Display, Debug, Clone, Ord, Copy, Eq, PartialEq, EnumIter, PartialOrd, Deserialize)]
+#[derive(
+    Display, Debug, Clone, Ord, Copy, Eq, PartialEq, EnumIter, PartialOrd, Deserialize, Hash,
+)]
 #[display(style = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub enum EntityType {
