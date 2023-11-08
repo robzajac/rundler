@@ -751,10 +751,7 @@ fn get_storage_restriction(args: GetStorageRestrictionArgs<'_>) -> StorageRestri
     } else if slots_by_address.is_associated_slot(sender_address, slot) {
         // Allow entities to access the sender's associated storage unless its during an unstaked wallet creation
         // Can always access the entry point's associated storage (note only depositTo is allowed to be called)
-        if entity.address == sender_address
-            || accessed_address == entry_point_address
-            || !is_unstaked_wallet_creation
-        {
+        if accessed_address == entry_point_address || !is_unstaked_wallet_creation {
             StorageRestriction::Allowed
         } else {
             StorageRestriction::NeedsStake(EntityType::Factory)
