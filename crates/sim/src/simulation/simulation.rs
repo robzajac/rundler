@@ -18,6 +18,7 @@ use std::{
     sync::Arc,
 };
 
+use anyhow::Context;
 use async_trait::async_trait;
 use ethers::{
     abi::AbiDecode,
@@ -260,6 +261,7 @@ where
         }
 
         let sender_address = entity_infos.sender_address();
+        let mut entity_type_storage_restrictions: HashMap<&str, Entity> = HashMap::new();
 
         for (index, phase) in tracer_out.phases.iter().enumerate().take(3) {
             let kind = entity_type_from_simulation_phase(index).unwrap();
@@ -296,13 +298,14 @@ where
                 ));
             }
 
-            let mut needs_stake_entity_type = if entity.kind == EntityType::Paymaster
+            if entity.kind == EntityType::Paymaster
                 && !entry_point_out.return_info.paymaster_context.is_empty()
             {
-                Some(EntityType::Paymaster)
-            } else {
-                None
-            };
+                entity_infos.add_to_storage_restrictions(
+                    &mut entity_type_storage_restrictions,
+                    EntityType::Paymaster,
+                )?;
+            }
 
             let mut banned_slots_accessed = IndexSet::<StorageSlot>::new();
             for StorageAccess { address, slots } in &phase.storage_accesses {
@@ -321,7 +324,10 @@ where
                     match restriction {
                         StorageRestriction::Allowed => {}
                         StorageRestriction::NeedsStake(e) => {
-                            needs_stake_entity_type = Some(e);
+                            entity_infos.add_to_storage_restrictions(
+                                &mut entity_type_storage_restrictions,
+                                e,
+                            )?;
                         }
                         StorageRestriction::Banned => {
                             banned_slots_accessed.insert(StorageSlot {
@@ -333,22 +339,6 @@ where
                 }
             }
 
-            if let Some(entity_type) = needs_stake_entity_type {
-                entities_needing_stake.push(entity_type);
-
-                let entity_info = entity_infos.get(entity_type).unwrap();
-
-                if !entity_info.is_staked {
-                    violations.push(SimulationViolation::NotStaked(
-                        Entity {
-                            kind: entity_type,
-                            address: entity_info.address,
-                        },
-                        self.sim_settings.min_stake_value.into(),
-                        self.sim_settings.min_unstake_delay.into(),
-                    ));
-                }
-            }
             for slot in banned_slots_accessed {
                 violations.push(SimulationViolation::InvalidStorageAccess(entity, slot));
             }
@@ -372,6 +362,14 @@ where
                     entity, address,
                 ))
             }
+        }
+
+        for ent in entity_type_storage_restrictions.values() {
+            violations.push(SimulationViolation::NotStaked(
+                *ent,
+                self.sim_settings.min_stake_value.into(),
+                self.sim_settings.min_unstake_delay.into(),
+            ));
         }
 
         if let Some(aggregator_info) = entry_point_out.aggregator_info {
@@ -685,6 +683,24 @@ impl EntityInfos {
             EntityType::Paymaster => self.paymaster,
             _ => None,
         }
+    }
+
+    fn add_to_storage_restrictions(
+        &self,
+        storage_restictions: &mut HashMap<&str, Entity>,
+        entity: EntityType,
+    ) -> Result<(), SimulationError> {
+        let entity_info = self.get(entity).context("Entity info not found")?;
+
+        storage_restictions.insert(
+            entity.to_str(),
+            Entity {
+                kind: entity,
+                address: entity_info.address,
+            },
+        );
+
+        Ok(())
     }
 
     fn sender_address(self) -> Address {
