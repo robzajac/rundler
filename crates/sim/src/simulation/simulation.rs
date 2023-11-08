@@ -300,6 +300,7 @@ where
 
             if entity.kind == EntityType::Paymaster
                 && !entry_point_out.return_info.paymaster_context.is_empty()
+                && !entity_info.is_staked
             {
                 entity_infos.add_to_storage_restrictions(
                     &mut entity_type_storage_restrictions,
@@ -324,10 +325,12 @@ where
                     match restriction {
                         StorageRestriction::Allowed => {}
                         StorageRestriction::NeedsStake(e) => {
-                            entity_infos.add_to_storage_restrictions(
-                                &mut entity_type_storage_restrictions,
-                                e,
-                            )?;
+                            if !entity_info.is_staked {
+                                entity_infos.add_to_storage_restrictions(
+                                    &mut entity_type_storage_restrictions,
+                                    e,
+                                )?;
+                            }
                         }
                         StorageRestriction::Banned => {
                             banned_slots_accessed.insert(StorageSlot {
@@ -365,6 +368,7 @@ where
         }
 
         for ent in entity_type_storage_restrictions.values() {
+            entities_needing_stake.push(ent.kind);
             violations.push(SimulationViolation::NotStaked(
                 *ent,
                 self.sim_settings.min_stake_value.into(),
